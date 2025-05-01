@@ -39,9 +39,11 @@ fn callback(io: *ourio.Ring, task: ourio.Task) anyerror!void {
         1 => {
             const ptr = try result.userptr;
             const resolver: *stda.net.dns.Resolver = @ptrCast(@alignCast(ptr));
-            try resolver.resolveQueries(io, &.{
-                .{ .host = "rockorager.dev" },
-            }, .{ .cb = callback });
+            try resolver.resolveQuery(
+	        io,
+		.{ .host = "rockorager.dev" },
+		.{ .cb = callback },
+	    );
         },
         else => {},
     }
