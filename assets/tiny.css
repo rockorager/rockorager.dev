@@ -343,13 +343,21 @@ article footer p {
   margin-top: 0;
 }
 
-code.zig {}
+code.zig {
+  color: var(--cyan);
+}
+
+code.zig .punctuation {
+  color: var(--cyan);
+}
 
 code.zig .string {
   color: var(--dark-yellow);
 }
 
 code.zig .variable,
+code.zig .parameter,
+code.zig .exception,
 code.zig .field {
   color: var(--light-yellow);
 }
@@ -370,8 +378,13 @@ code.zig .builtin {
   color: var(--magenta);
 }
 
+code.zig .number {
+  color: var(--magenta);
+}
+
 code.zig .operator,
 code.zig .qualifier,
+code.zig .keyword,
 code.zig .attribute {
   color: var(--light-red);
 }
