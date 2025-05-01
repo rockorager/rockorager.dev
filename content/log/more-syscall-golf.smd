@@ -1,0 +1,37 @@
+---
+.title = "More syscall golf",
+.date = @date("2025-05-01T16:41:52-05:00"),
+.author = "Tim Culverhouse",
+.layout = "post.shtml",
+---
+
+I realized that in [my last
+post](https://rockorager.dev/log/asynchronous-dns-resolving-with-io-uring/) the
+zig std library is checking for both A and AAAA records (IP4 and IP6). I
+modified my example code to query for both records and we end up with only 1
+fewer syscall using ourio than stdlib. To show off the scalability of
+asynchronous resolving, I also tried resolving three domains at the same time:
+
+```zig
+fn callback(io: *ourio.Ring, task: ourio.Task) anyerror!void {
+    const result = task.result.?;
+    switch (task.msg) {
+        1 => {
+            const ptr = try result.userptr;
+            const resolver: *stda.net.dns.Resolver = @ptrCast(@alignCast(ptr));
+            try resolver.resolveQuery(io, .{ .host = "timculverhouse.com" }, .{ .cb = callback });
+            try resolver.resolveQuery(io, .{ .host = "timculverhouse.com", .type = .AAAA }, .{ .cb = callback });
+            try resolver.resolveQuery(io, .{ .host = "ziglang.org" }, .{ .cb = callback });
+            try resolver.resolveQuery(io, .{ .host = "ziglang.org", .type = .AAAA }, .{ .cb = callback });
+            try resolver.resolveQuery(io, .{ .host = "github.com" }, .{ .cb = callback });
+            try resolver.resolveQuery(io, .{ .host = "github.com", .type = .AAAA }, .{ .cb = callback });
+        },
+
+        else => {},
+    }
+}
+```
+
+When doing this, we end up with 40-42 syscalls for ourio and 99-102 syscalls for
+the stdlib. Let's take out 12 calls for loading /etc/hosts and Ourio is doing
+about 50 fewer syscalls for this workload (**half** as many)!
