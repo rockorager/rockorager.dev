@@ -117,6 +117,7 @@ code {
   border-radius: 0.25rem;
   color: var(--text-bright);
   padding: 0.25rem;
+  font-size: 1rem;
 }
 pre > code {
   display: block;
