@@ -1,0 +1,148 @@
+---
+.title = "Asynchronous DNS resolving with io_uring",
+.date = @date("2025-05-01T11:19:26-05:00"),
+.author = "Tim Culverhouse",
+.layout = "post.shtml",
+---
+
+Yesterday I added an asynchronous DNS resolver to my
+[io](https://github.com/rockorager/ourio) library. The std library way to
+resolve an address is
+
+```zig
+pub fn main() !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .{};
+    const addrs = try std.net.getAddressList(gpa.allocator(), "rockorager.dev", 443);
+    defer addrs.deinit();
+}
+```
+
+With ourio, this becomes a bit more verbose since we have asynchronous
+callbacks:
+
+```zig
+pub fn main() !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .{};
+    var io: ourio.Ring = try .init(gpa.allocator(), 16);
+    defer io.deinit();
+
+    var resolver: stda.net.dns.Resolver = undefined;
+    try resolver.init(gpa.allocator(), &io, .{ .msg = 1, .cb = callback });
+    defer resolver.deinit();
+
+    try io.run(.until_done);
+}
+
+fn callback(io: *ourio.Ring, task: ourio.Task) anyerror!void {
+    const result = task.result.?;
+    switch (task.msg) {
+        1 => {
+            const ptr = try result.userptr;
+            const resolver: *stda.net.dns.Resolver = @ptrCast(@alignCast(ptr));
+            try resolver.resolveQueries(io, &.{
+                .{ .host = "rockorager.dev" },
+            }, .{ .cb = callback });
+        },
+        else => {},
+    }
+}
+```
+
+Now, it's unlikely that a shortlived program like this is going to benefit much,
+if at all, from creating an io_uring event loop and operating asynchronously.
+But io_uring also gives us a chance to batch syscalls and in the ourio dns
+case, every syscall is done through io_uring (open, read, close, recv, write,
+etc) and a few have the opportunity for batching. For example, at the same time
+we write the DNS packet we also recv the connection. So what we *can* do to
+benchmark this vs the standard library is to check the number of syscalls.
+
+```sh
+$ strace ./zig-out/bin/scratch --sync 2>| wc -l
+38
+$ strace ./zig-out/bin/scratch --async 2>| wc -l
+30
+```
+
+That's over a 25% reduction in syscalls for a mostly synchronous program! Now,
+it's not quite fair...if we look at what std is doing, it is also checking the
+`/etc/hosts` file, which ourio does not do. That's 4 syscalls there (openat,
+read, read, close). Taking those out we have **4 fewer syscalls than stdlib**.
+Still a pretty decent reduction for this simple example.
+
+For posterity, the raw output of each strace:
+
+## Stdlib
+
+```
+execve("./zig-out/bin/scratch", ["./zig-out/bin/scratch", "--sync"], 0x7ffd51074538 /* 46 vars */) = 0
+arch_prctl(ARCH_SET_FS, 0x105d010)      = 0
+prlimit64(0, RLIMIT_STACK, NULL, {rlim_cur=16384*1024, rlim_max=RLIM64_INFINITY}) = 0
+rt_sigaction(SIGPIPE, {sa_handler=0x1011310, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x102a5e0}, NULL, 8) = 0
+mmap(NULL, 258048, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7e98827de000
+munmap(0x7e98827de000, 8192)            = 0
+munmap(0x7e9882800000, 118784)          = 0
+openat(AT_FDCWD, "/etc/hosts", O_RDONLY|O_NOCTTY|O_CLOEXEC) = 3
+read(3, "# Static table lookup for hostna"..., 4096) = 65
+read(3, "", 4096)                       = 0
+close(3)                                = 0
+openat(AT_FDCWD, "/etc/resolv.conf", O_RDONLY|O_NOCTTY|O_CLOEXEC) = 3
+read(3, "# This is /run/systemd/resolve/s"..., 4096) = 920
+mmap(0x7e9882800000, 258048, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7e98827a1000
+munmap(0x7e98827a1000, 126976)          = 0
+read(3, "", 4096)                       = 0
+close(3)                                = 0
+clock_gettime(CLOCK_REALTIME, {tv_sec=1746120290, tv_nsec=235863327}) = 0
+clock_gettime(CLOCK_REALTIME, {tv_sec=1746120290, tv_nsec=235903560}) = 0
+socket(AF_INET, SOCK_DGRAM|SOCK_CLOEXEC|SOCK_NONBLOCK, IPPROTO_IP) = 3
+bind(3, {sa_family=AF_INET, sin_port=htons(0), sin_addr=inet_addr("0.0.0.0")}, 16) = 0
+clock_gettime(CLOCK_REALTIME, {tv_sec=1746120290, tv_nsec=236046887}) = 0
+sendto(3, "\v-\1\0\0\1\0\0\0\0\0\0\nrockorager\3dev\0\0\1\0\1", 32, MSG_NOSIGNAL, {sa_family=AF_INET, sin_port=htons(53), sin_addr=inet_addr("127.0.0.53")}, 16) = 32
+sendto(3, "\250W\1\0\0\1\0\0\0\0\0\0\nrockorager\3dev\0\0\34\0\1", 32, MSG_NOSIGNAL, {sa_family=AF_INET, sin_port=htons(53), sin_addr=inet_addr("127.0.0.53")}, 16) = 32
+poll([{fd=3, events=POLLIN}], 1, 2500)  = 1 ([{fd=3, revents=POLLIN}])
+recvfrom(3, "\v-\201\200\0\1\0\1\0\0\0\0\nrockorager\3dev\0\0\1\0\1"..., 512, 0, {sa_family=AF_INET, sin_port=htons(53), sin_addr=inet_addr("127.0.0.53")}, [16]) = 48
+recvfrom(3, "\250W\201\200\0\1\0\0\0\1\0\0\nrockorager\3dev\0\0\34\0\1"..., 512, 0, {sa_family=AF_INET, sin_port=htons(53), sin_addr=inet_addr("127.0.0.53")}, [16]) = 105
+close(3)                                = 0
+mmap(0x7e98827e0000, 258048, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7e9882781000
+munmap(0x7e9882781000, 126976)          = 0
+munmap(0x7e98827c0000, 131072)          = 0
+munmap(0x7e98827a0000, 131072)          = 0
+munmap(0x7e98827e0000, 131072)          = 0
+exit_group(0)                           = ?
++++ exited with 0 +++
+```
+
+## Ourio
+
+```
+execve("./zig-out/bin/scratch", ["./zig-out/bin/scratch", "--async"], 0x7ffc8137db58 /* 46 vars */) = 0
+arch_prctl(ARCH_SET_FS, 0x105d010)      = 0
+prlimit64(0, RLIMIT_STACK, NULL, {rlim_cur=16384*1024, rlim_max=RLIM64_INFINITY}) = 0
+rt_sigaction(SIGPIPE, {sa_handler=0x1011310, sa_mask=[], sa_flags=SA_RESTORER, sa_restorer=0x102a5e0}, NULL, 8) = 0
+io_uring_setup(16, {flags=IORING_SETUP_CLAMP|IORING_SETUP_SUBMIT_ALL|IORING_SETUP_COOP_TASKRUN|IORING_SETUP_SINGLE_ISSUER|IORING_SETUP_DEFER_TASKRUN, sq_thread_cpu=0, sq_thread_idle=1000, sq_entries=16, cq_entries=32, features=IORING_FEAT_SINGLE_MMAP|IORING_FEAT_NODROP|IORING_FEAT_SUBMIT_STABLE|IORING_FEAT_RW_CUR_POS|IORING_FEAT_CUR_PERSONALITY|IORING_FEAT_FAST_POLL|IORING_FEAT_POLL_32BITS|IORING_FEAT_SQPOLL_NONFIXED|IORING_FEAT_EXT_ARG|IORING_FEAT_NATIVE_WORKERS|IORING_FEAT_RSRC_TAGS|IORING_FEAT_CQE_SKIP|IORING_FEAT_LINKED_FILE|IORING_FEAT_REG_REG_RING|IORING_FEAT_RECVSEND_BUNDLE|IORING_FEAT_MIN_TIMEOUT|IORING_FEAT_RW_ATTR, sq_off={head=0, tail=4, ring_mask=16, ring_entries=24, flags=36, dropped=32, array=576, user_addr=0}, cq_off={head=8, tail=12, ring_mask=20, ring_entries=28, overflow=44, cqes=64, flags=40, user_addr=0}}) = 3
+mmap(NULL, 640, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_POPULATE, 3, 0) = 0x7bc52c7a2000
+mmap(NULL, 1024, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_POPULATE, 3, 0x10000000) = 0x7bc52c7a1000
+mmap(NULL, 258048, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7bc52c762000
+munmap(0x7bc52c762000, 122880)          = 0
+munmap(0x7bc52c7a0000, 4096)            = 0
+io_uring_enter(3, 1, 1, IORING_ENTER_GETEVENTS, NULL, 8) = 1
+mmap(0x7bc52c7a0000, 258048, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7bc52c741000
+munmap(0x7bc52c741000, 126976)          = 0
+io_uring_enter(3, 1, 1, IORING_ENTER_GETEVENTS, NULL, 8) = 1
+clock_gettime(CLOCK_REALTIME, {tv_sec=1746120306, tv_nsec=417392127}) = 0
+mmap(0x7bc52c780000, 258048, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7bc52c721000
+munmap(0x7bc52c721000, 126976)          = 0
+io_uring_enter(3, 2, 1, IORING_ENTER_GETEVENTS, NULL, 8) = 2
+io_uring_enter(3, 1, 1, IORING_ENTER_GETEVENTS, NULL, 8) = 1
+munmap(0x7bc52c740000, 131072)          = 0
+io_uring_enter(3, 4, 1, IORING_ENTER_GETEVENTS, NULL, 8) = 4
+io_uring_enter(3, 0, 1, IORING_ENTER_GETEVENTS, NULL, 8) = 0
+munmap(0x7bc52c760000, 131072)          = 0
+io_uring_enter(3, 1, 1, IORING_ENTER_GETEVENTS, NULL, 8) = 1
+munmap(0x7bc52c7a1000, 1024)            = 0
+munmap(0x7bc52c7a2000, 640)             = 0
+close(3)                                = 0
+munmap(0x7bc52c780000, 131072)          = 0
+exit_group(0)                           = ?
++++ exited with 0 +++
+```
+

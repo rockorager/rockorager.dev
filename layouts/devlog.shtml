@@ -1,0 +1,28 @@
+<extend template="base.shtml">
+<title id="title" :text="$page.title"></title>
+<main id="main">
+  <h1 :text="$page.title"></h1>
+  <ctx :loop="$page.subpages()">
+    <article>
+      <header>
+        <h2><a
+            href="$loop.it.link()"
+            :text="$loop.it.title"
+          ></a></h2>
+        <time
+          datetime="$loop.it.date.format('2006-01-02')"
+          :text="$loop.it.date.format('January 02, 2006')"
+        ></time>
+      </header>
+      <ctx :html="$loop.it.content()"></ctx>
+    </article>
+  </ctx>
+  <footer>
+    <p
+      style="color:var(--text-muted);"
+    >Also available as an
+      <ctx alt="$page.alternative('rss')">
+        <a href="$ctx.alt.link()" type="$ctx.alt.type">RSS</a>
+      </ctx>feed.</p>
+  </footer>
+</main>

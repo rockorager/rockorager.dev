@@ -1,0 +1,19 @@
+<extend template="base.shtml">
+<title id="title" :text="$page.title"></title>
+<main id="main">
+  <article>
+    <header>
+      <h1 :text="$page.title"></h1>
+      <time
+        datetime="$page.date.format('2006-01-02')"
+        style="color:var(--text-muted);"
+        :text="$page.date.format('January 02, 2006')"
+      ></time>
+    </header>
+    <section :html="$page.content()"></section>
+    <footer>
+      <p style="color:var(--text-muted);">--
+        <br>Tim</p>
+    </footer>
+  </article>
+</main>

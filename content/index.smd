@@ -1,0 +1,14 @@
+---
+.title = "Tim Culverhouse",
+.date = @date("2024-10-02T20:34:18"),
+.author = "Tim Culverhouse",
+.layout = "home.shtml",
+.draft = false,
+---
+
+> Everyone should own theirname.com
+> ```=html
+> <footer>
+>   <cite>— Tim Culverhouse</cite>
+> </footer>
+> ```
