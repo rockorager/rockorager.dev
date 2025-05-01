@@ -11,11 +11,11 @@ fi
 TITLE="$1"
 DATE=$(date -Iseconds) # ISO 8601 format
 SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-//;s/-$//')
-FILENAME="content/log/${SLUG}.smd"
+FILENAME="$HOME/repos/github.com/rockorager/rockorager.dev/content/log/${SLUG}.smd"
 
 sed \
 	-e "s|{{TITLE}}|$TITLE|g" \
 	-e "s|{{DATE}}|$DATE|g" \
-	templates/logpost.txt >"$FILENAME"
+	$HOME/repos/github.com/rockorager/rockorager.dev/templates/logpost.txt >"$FILENAME"
 
 $EDITOR "$FILENAME"
