@@ -13,6 +13,11 @@ DATE=$(date -Iseconds) # ISO 8601 format
 SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-//;s/-$//')
 FILENAME="$HOME/repos/github.com/rockorager/rockorager.dev/content/log/${SLUG}.smd"
 
+if [ -e "$FILENAME" ]; then
+	echo "Error: File '$FILENAME' already exists."
+	exit 1
+fi
+
 sed \
 	-e "s|{{TITLE}}|$TITLE|g" \
 	-e "s|{{DATE}}|$DATE|g" \
