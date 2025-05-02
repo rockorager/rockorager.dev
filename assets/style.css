@@ -14,14 +14,15 @@
   --table-bg-alt: #e8e8e8;
   --box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 
-  --light-yellow: #e5c07b;
-  --dark-yellow: #d19a66;
-  --blue: #61afef;
-  --cyan: #56b6c2;
-  --light-red: #e06c75;
-  --dark-red: #be5046;
-  --comment-gray: #5c6370;
-  --magenta: #c678dd;
+  --light-yellow: #8c6c3e;
+  --dark-yellow: #a27629;
+  --blue: #2e7de9;
+  --cyan: #007197;
+  --light-red: #f52a65;
+  --dark-red: #c64343;
+  --comment-gray: #6172b0;
+  --magenta: #9854f1;
+    --green: #587539;
 }
 ::backdrop {
   --dialog-backdrop: rgba(0, 0, 0, 0.1);
@@ -44,14 +45,15 @@
     --box-shadow: 0 0 0px 1px hsla(0, 0%, 100%, 0.15),
       rgba(0, 0, 0, 0.24) 0px 3px 8px;
 
-    --light-yellow: #e5c07b;
-    --dark-yellow: #d19a66;
-    --blue: #61afef;
-    --cyan: #56b6c2;
-    --light-red: #e06c75;
-    --dark-red: #be5046;
-    --comment-gray: #5c6370;
-    --magenta: #c678dd;
+    --light-yellow: #e0af68;
+    --dark-yellow: #faba4a;
+    --blue: #7aa2f7;
+    --cyan: #7dcfff;
+    --light-red: #f7768e;
+    --dark-red: #db4b4b;
+    --comment-gray: #a9b1d6;
+    --magenta: #bb9af7;
+    --green: #9ece6a;
   }
   ::backdrop {
     --dialog-backdrop: hsla(0, 0%, 100%, 0.1);
@@ -344,48 +346,59 @@ article footer p {
   margin-top: 0;
 }
 
-code.zig {
-  color: var(--cyan);
-}
-
-code.zig .punctuation {
-  color: var(--cyan);
+code.zig .operator,
+code.zig .punctuation_delimiter,
+code.zig .punctuation_bracket {
+  color: var(--text-muted);
 }
 
 code.zig .string {
-  color: var(--dark-yellow);
+  color: var(--green);
 }
 
-code.zig .variable,
+code.zig .type_builtin {
+  color: var(--cyan);
+}
+
+code.zig .variable_member {
+  color: var(--cyan);
+
+}
+
+code.zig .function_builtin,
+code.zig .function,
+code.zig .function_call {
+  color: var(--blue);
+}
+
+code.zig .keyword_function {
+  color: var(--magenta);
+}
+
 code.zig .parameter,
 code.zig .exception,
 code.zig .field {
   color: var(--light-yellow);
 }
 
-code.zig .keyword.function {
-  color: var(--light-red);
-}
-
-code.zig .bracket {
-  color: var(--cyan);
-}
-
-code.zig .function {
-  color: var(--blue);
-}
-
+code.zig .keyword,
+code.zig .keyword_conditional,
+code.zig .keyword_exception,
+code.zig .keyword_modifier,
 code.zig .builtin {
   color: var(--magenta);
 }
 
 code.zig .number {
-  color: var(--magenta);
+  color: var(--dark-yellow);
 }
 
-code.zig .operator,
+code.zig .operator {
+  color: var(--cyan);
+}
+
 code.zig .qualifier,
-code.zig .keyword,
 code.zig .attribute {
   color: var(--light-red);
 }
+

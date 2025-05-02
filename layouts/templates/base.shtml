@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="$site.asset('tiny.css').link()">
+    <link rel="stylesheet" href="$site.asset('style.css').link()">
     <link rel="icon" type="/image/x-icon" href="$site.asset('favicon.png').link()">
     <title id="title"><super>
       - rockorager.dev</title>
