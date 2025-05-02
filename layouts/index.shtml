@@ -1,0 +1,53 @@
+<extend template="base.shtml">
+<title id="title">Home</title>
+<main id="main">
+  <style>
+    .profile { 
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+    }
+    .profile #avatar { 
+      border-radius: 50%;
+      max-width: 240px;
+      max-height: 240px;
+      box-shadow: 0 0 24px var(--background-hover);
+    }
+    .links {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+      justify-content: center;
+      padding: 0;
+      margin-top: 2rem;
+    }
+    .links a img {
+      width: 24px;
+      height: 24px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .links a img {
+        filter: invert(1);
+      }
+    }
+  </style>
+  <div class="profile">
+    <img
+      id="avatar"
+      src="$site.asset('tim.webp').link()"
+      alt="Tim Culverhouse (aka rockorager)"
+    >
+    <ul class="links">
+      <li>
+        <a href="https://github.com/rockorager" rel="me">
+          <img src="$site.asset('icons/github.svg').link()" alt="Github">
+        </a>
+      </li>
+      <li>
+        <a href="mailto:tim@rockorager.dev" rel="me">
+          <img src="$site.asset('icons/envelope.svg').link()" alt="Email">
+        </a>
+      </li>
+    </ul>
+  </div>
+</main>

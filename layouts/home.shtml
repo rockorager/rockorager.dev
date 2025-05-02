@@ -1,4 +1,0 @@
-<extend template="base.shtml">
-<title id="title">Home</title>
-<main id="main" :html="$page.content()">
-</main>
