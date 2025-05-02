@@ -73,7 +73,7 @@ Still a pretty decent reduction for this simple example.
 
 For posterity, the raw output of each strace:
 
-## Stdlib
+## [Stdlib]($section.id('stdlib').attrs('section'))
 
 ```
 execve("./zig-out/bin/scratch", ["./zig-out/bin/scratch", "--sync"], 0x7ffd51074538 /* 46 vars */) = 0
@@ -113,7 +113,7 @@ exit_group(0)                           = ?
 +++ exited with 0 +++
 ```
 
-## Ourio
+## [Ourio]($section.id('ourio').attrs('section'))
 
 ```
 execve("./zig-out/bin/scratch", ["./zig-out/bin/scratch", "--async"], 0x7ffc8137db58 /* 46 vars */) = 0
