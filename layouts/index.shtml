@@ -30,24 +30,30 @@
         filter: invert(1);
       }
     }
+    .u-uid {
+      text-decoration: none;
+      color: inherit;
+    }
   </style>
-  <div class="profile">
+  <div class="profile h-card">
     <img
+      class="u-photo"
       id="avatar"
       src="$site.asset('tim.webp').link()"
-      alt="Tim Culverhouse (aka rockorager)"
+      alt="Tim Culverhouse (rockorager)"
     >
     <ul class="links">
       <li>
-        <a href="https://github.com/rockorager" rel="me">
+        <a href="https://github.com/rockorager" rel="me" class="u-url">
           <img src="$site.asset('icons/github.svg').link()" alt="Github">
         </a>
       </li>
       <li>
-        <a href="mailto:tim@rockorager.dev" rel="me">
+        <a href="mailto:tim@rockorager.dev" rel="me" class="u-email">
           <img src="$site.asset('icons/envelope.svg').link()" alt="Email">
         </a>
       </li>
     </ul>
+    <a href="$site.link()" class="u-url u-uid">Tim Culverhouse</a>
   </div>
 </main>
