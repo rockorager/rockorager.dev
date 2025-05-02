@@ -2,21 +2,24 @@
 <title id="title" :text="$page.title"></title>
 <main id="main">
   <h1 :text="$page.title"></h1>
-  <ctx :loop="$page.subpages()">
-    <article>
+  <div class="h-feed" :loop="$page.subpages()">
+    <article class="h-entry">
       <header>
-        <h2><a
+        <h2 class="p-name"><a
             href="$loop.it.link()"
+            class="u-url"
             :text="$loop.it.title"
           ></a></h2>
         <time
-          datetime="$loop.it.date.format('2006-01-02')"
+          class="dt-published"
+          datetime="$loop.it.date.format('2006-01-02T15:04:05Z')"
           :text="$loop.it.date.format('January 02, 2006')"
         ></time>
+        <a class="p-author h-card" href="$site.link()"></a>
       </header>
-      <ctx :html="$loop.it.content()"></ctx>
+      <section class="e-content" :html="$loop.it.content()"></section>
     </article>
-  </ctx>
+  </div>
   <footer>
     <p
       style="color:var(--text-muted);"
