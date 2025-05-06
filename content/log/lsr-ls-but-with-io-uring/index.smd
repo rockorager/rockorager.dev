@@ -61,7 +61,7 @@ drastically smaller than equivalent programs because we are able to batch the
 `stat` syscall. The results clearly show this...`lsr` has at least an order of
 magnitude fewer syscalls than it's closest equivalent, being `uutils ls`.
 
-We also use the zig stlib StackFallbackAllocator. This let's `lsr` allocate
+We also use the zig stdlib StackFallbackAllocator. This let's `lsr` allocate
 memory it needs up front, but fallback to a different allocator when it's
 exhausted the fixed allocation. We allocate 1MB up front, which is more than
 enough for typical usage. This further reduces syscalls by reducing mmap usage.
