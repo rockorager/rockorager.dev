@@ -70,6 +70,8 @@ As a result of working directly with io_uring, we also bypass several libc
 related pitfalls. Namely, we have no dynamic linking - `ls` has some
 considerable overhead in loading libc and related libraries...but it also has
 the benefit of having locale support. `lsr` does not boast such a feature.
+Despite being statically linked, `lsr` is still smaller than GNU `ls`: 138.7KB
+vs 79.3KB when built with ReleaseSmall.
 
 ## Anomolies and Thoughts
 
