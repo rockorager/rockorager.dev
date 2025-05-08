@@ -55,5 +55,6 @@
       </li>
     </ul>
     <a href="$site.link()" class="u-url u-uid">Tim Culverhouse</a>
+    <a href="$site.page('log').link()" class="u-url u-uid">Devlog</a>
   </div>
 </main>
