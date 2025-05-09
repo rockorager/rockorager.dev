@@ -1,0 +1,67 @@
+---
+.title = "knit: a cli for interacting with tangled.sh",
+.date = @date("2025-05-09T15:34:59-05:00"),
+.author = "Tim Culverhouse",
+.layout = "post.shtml",
+---
+
+[tangled.sh](https://tangled.sh) is a *fantastic* new git forge. It has all of
+it's social features built around the AT Protocol (think Bluesky), and has what
+I find to be a really nice PR workflow. They manage to get a workflow that I
+prefer even over an email based workflow. To illustrate, imagine you have a PR
+or patch series and before it's merged there will be at least one round of
+review + updates. With an email workflow, you'd resend the series with a `v2` in
+the prefix (ie `[PATCH v2]`). If there were multiple commits, the recipients get
+a fresh new copy of all commits with the changes - but *what* changed between
+revisions? Typically you have to rely on the author to *tell* you if it's a
+large patch series, or maybe you can spot it. Here's an example from a patch I
+sent it. I summarized the change just below the commit message...but that
+doesn't mean much.
+
+```
+From: Tim Culverhouse <tim@timculverhouse.com>
+To: ~rjarry/aerc-devel@lists.sr.ht
+Subject: [PATCH aerc v2] deps: update vaxis to v0.10.1
+
+Vaxis v0.10.1 brings with it a few bug fixes, major sixel performance
+improvements, and a new VT extension which enables Vaxis to receive
+window resize updates in-band via escape sequences on supported
+terminals (foot, ghostty, iTerm2, and kitty as of this patch).
+
+- Improved performance all around for sixels (thanks, delthas)
+- Fix key decoding for Home and End for the st terminal
+- Implement mode 2048 for in-band resizes
+- Add quirk for tmux 3.4 to turn on unicode width measurements
+
+Signed-off-by: Tim Culverhouse <tim@timculverhouse.com>
+---
+v2: Fix reporting of resize events under mode 2048
+ go.mod | 2 +-
+ go.sum | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+```
+
+Github allows for a few different ways to handle updates to a PR. First, you can
+force push. This is like sending a new version of a patch series - all the
+commits are replaced, and it's up to the reviewer to spot the changes (or the
+committer to note them). Alternatively, you could push a *new* commit and then
+it's very clear what changed. If the new commit is fixing a bug, and the project
+wants a clean commit history, you are in a bit of a bind. Using the "Rebase and
+Merge" button on Github *doesn't* autosquash...so even if the committer was nice
+and did this update as a `--fixup`, it won't squash. You'll have to pull the
+commit down manually, autosquash, then push. Then that PR is left hanging
+there...it's a mess.
+
+Tangled solves this by having round based reviews, similar to the email
+workflow. The key difference is that you get an *interdiff* button. What's an
+interdiff? **The diff between rounds**. How amazing is that? You can review
+*exactly* what changed between each round.
+
+Anyways, I am pretty happy with what they've built. You should try it out. I
+also built a small CLI for working with tangled.sh...it's *very* barebones but
+it let's you create a pr *without needing a fork or a branch*. You can `git
+clone https://tangled.sh/rockorager.dev/knit` and then `knit pr create HEAD~1`
+and your patch will appear on my repo as a PR. It's like git-send-email but
+better.
+
+[knit](https://tangled.dev/@rockorager.dev/knit)
