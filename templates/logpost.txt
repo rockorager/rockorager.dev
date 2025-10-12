@@ -1,6 +1,0 @@
----
-.title = "{{TITLE}}",
-.date = @date("{{DATE}}"),
-.author = "Tim Culverhouse",
-.layout = "post.shtml",
----

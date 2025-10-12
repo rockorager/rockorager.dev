@@ -3,7 +3,7 @@
 set -e
 
 rm -rf public
-zine release
+hugo
 
 REMOTE_USER="tim"
 REMOTE_HOST="rockorager.dev"

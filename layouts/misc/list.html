@@ -1,0 +1,15 @@
+{{ define "main" }}
+<h1>{{ .Title }}</h1>
+<ul class="notes-list">
+  {{ range .Pages }}
+  <li>
+    <a href="{{ .Permalink }}" class="note-card">
+      <h2 class="note-title">{{ .Title }}</h2>
+      {{ if .Description }}
+      <p>{{ .Description }}</p>
+      {{ end }}
+    </a>
+  </li>
+  {{ end }}
+</ul>
+{{ end }}

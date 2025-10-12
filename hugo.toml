@@ -1,0 +1,15 @@
+baseURL = 'https://rockorager.dev/'
+languageCode = 'en-us'
+title = 'rockorager.dev'
+
+[params]
+description = 'A minimal blog'
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+    [markup.goldmark.parser]
+      [markup.goldmark.parser.attribute]
+        block = true
+        title = true

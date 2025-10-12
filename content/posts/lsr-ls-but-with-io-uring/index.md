@@ -1,9 +1,9 @@
----
-.title = "lsr: ls but with io_uring",
-.date = @date("2025-05-06T11:15:50-05:00"),
-.author = "Tim Culverhouse",
-.layout = "post.shtml",
----
++++
+title = "lsr: ls but with io_uring"
+date = 2025-05-06T11:15:50-05:00
+author = "Tim Culverhouse"
+draft = false
++++
 
 
 As an excercise in syscall golf, I wrote an implementation of `ls(1)` which uses
@@ -14,11 +14,11 @@ magnitude fewer syscalls**. I'm calling it
 [lsr](https://tangled.sh/@rockorager.dev/lsr). Let's start with the benchmarks,
 then we'll see how we got there.
 
-[]($image.asset('screenshot.webp'))
+![screenshot](screenshot.webp)
 
-## [Benchmarks]($section.id('benchmarks').attrs('section'))
+## Benchmarks
 
-### [Time]($section.id('time').attrs('section'))
+### Time
 
 Data gathered with `hyperfine` on a directory of `n` plain files.
 
@@ -30,7 +30,7 @@ Data gathered with `hyperfine` on a directory of `n` plain files.
 |    lsd -al    |  2.1 ms  |  3.5 ms  | 17.0 ms | 153.4 ms |
 | uutils ls -al | 2.9 ms   | 3.6 ms   | 11.3 ms | 89.6 ms  |
 
-### [Syscalls]($section.id('syscalls').attrs('section'))
+### Syscalls
 
 Data gathered with `strace -c` on a directory of `n` plain files. (Lower is better)
 
@@ -42,7 +42,7 @@ Data gathered with `strace -c` on a directory of `n` plain files. (Lower is bett
 |    lsd -al    |  508 | 1,408 | 10,423  | 100,512  |
 | uutils ls -al | 445  | 986   | 6,397   | 10,005   |
 
-## [How we got there]($section.id('how-we-got-there').attrs('section'))
+## How we got there
 
 Let's start with how `lsr` works. To list directory contents, we basically have
 3 stages to the program:

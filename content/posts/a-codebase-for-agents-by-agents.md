@@ -1,10 +1,9 @@
----
-.title = "A Codebase for agents, by agents",
-.date = @date("2025-09-19T14:29:40-07:00"),
-.author = "Tim Culverhouse",
-.layout = "post.shtml",
-.draft = false,
----
++++
+title = "A Codebase for agents, by agents"
+date = 2025-09-19T14:29:40-07:00
+author = "Tim Culverhouse"
+draft = true
++++
 
 When I am coding I find there are a lot of decisions I have to make that affect
 my ability to navigate the codebase. What should this function be called? Should

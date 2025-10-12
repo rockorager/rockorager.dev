@@ -1,7 +1,0 @@
-Site {
-    .title = "Tim Culverhouse",
-    .host_url = "https://rockorager.dev",
-    .layouts_dir_path = "layouts",
-    .content_dir_path = "content",
-    .assets_dir_path = "assets",
-}

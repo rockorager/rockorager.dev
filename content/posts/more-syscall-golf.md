@@ -1,10 +1,9 @@
----
-.title = "More syscall golf",
-.date = @date("2025-05-01T16:41:52-05:00"),
-.author = "Tim Culverhouse",
-.layout = "post.shtml",
-.draft = true,
----
++++
+title = "More syscall golf"
+date = 2025-05-01T16:41:52-05:00
+author = "Tim Culverhouse"
+draft = true
++++
 
 I realized that in [my last
 post](https://rockorager.dev/log/asynchronous-dns-resolving-with-io-uring/) the

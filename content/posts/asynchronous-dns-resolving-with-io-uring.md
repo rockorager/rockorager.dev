@@ -1,10 +1,9 @@
----
-.title = "Asynchronous DNS resolving with io_uring",
-.date = @date("2025-05-01T11:19:26-05:00"),
-.author = "Tim Culverhouse",
-.layout = "post.shtml",
-.draft = true,
----
++++
+title = "Asynchronous DNS resolving with io_uring"
+date = 2025-05-01T11:19:26-05:00
+author = "Tim Culverhouse"
+draft = true
++++
 
 Yesterday I added an asynchronous DNS resolver to my
 [io](https://github.com/rockorager/ourio) library. The std library way to
@@ -74,7 +73,7 @@ Still a pretty decent reduction for this simple example.
 
 For posterity, the raw output of each strace:
 
-## [Stdlib]($section.id('stdlib').attrs('section'))
+## Stdlib
 
 ```
 execve("./zig-out/bin/scratch", ["./zig-out/bin/scratch", "--sync"], 0x7ffd51074538 /* 46 vars */) = 0
@@ -114,7 +113,7 @@ exit_group(0)                           = ?
 +++ exited with 0 +++
 ```
 
-## [Ourio]($section.id('ourio').attrs('section'))
+## Ourio
 
 ```
 execve("./zig-out/bin/scratch", ["./zig-out/bin/scratch", "--async"], 0x7ffc8137db58 /* 46 vars */) = 0
@@ -148,4 +147,3 @@ munmap(0x7bc52c780000, 131072)          = 0
 exit_group(0)                           = ?
 +++ exited with 0 +++
 ```
-

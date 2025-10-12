@@ -1,10 +1,9 @@
----
-.title = "knit: a cli for interacting with tangled.sh",
-.date = @date("2025-05-09T15:34:59-05:00"),
-.author = "Tim Culverhouse",
-.layout = "post.shtml",
-.draft = true,
----
++++
+title = "knit: a cli for interacting with tangled.sh"
+date = 2025-05-09T15:34:59-05:00
+author = "Tim Culverhouse"
+draft = true
++++
 
 [tangled.sh](https://tangled.sh) is a *fantastic* new git forge. It has all of
 it's social features built around the AT Protocol (think Bluesky), and has what
