@@ -10,7 +10,7 @@ REMOTE_HOST="rockorager.dev"
 REMOTE_PATH="/var/www/rockorager.dev"
 
 rsync --archive \
-	--verbose \
-	--compress \
-	--delete \
-	public/ "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH"
+  --verbose \
+  --compress \
+  --delete \
+  public/ "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH"

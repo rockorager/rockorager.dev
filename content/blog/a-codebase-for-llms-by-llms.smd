@@ -1,0 +1,61 @@
+---
+.title = "A Codebase for agents, by agents",
+.date = @date("2025-09-19T14:29:40-07:00"),
+.author = "Tim Culverhouse",
+.layout = "post.shtml",
+.draft = false,
+---
+
+When I am coding I find there are a lot of decisions I have to make that affect
+my ability to navigate the codebase. What should this function be called? Should
+I make a new file for this type or should it be in an existing file? What should
+the file be called? Should I create a new directory for this? Not only do I have
+to decide these things, but I have to remember them. Every time I open neovim I
+have to think what would past-Tim have called this? Where would he have put it?
+I get hit with cognitive overhead on each side of the decision.
+
+The good thing is I can offload nearly all of this to an LLM now. And that's
+exactly what I did when creating the new TUI framework behind the Amp CLI. It's
+a port of my Zig TUI library into TypeScript, 90% written by Amp.
+
+The thing is - I *care* what these things are called, and how the codebase is
+structured. So early on when writing the Amp TUI framework I would often stop
+the LLM and tell it to rename some function, move a file to a different
+directory, or put some class into it's own file. *I* still wanted to make these
+decisions, even though I don't really like it. There's just some satisfaction
+from having things look nice in your codebase - so I interrupt the LLM and tell
+it "I know better".
+
+But I don't.
+
+The Amp TUI uses a double-buffering approach toward updating the screen. We keep
+a front and a back screen - one representing the last frame, the other the next
+frame. Then we diff them, print the updates, and swap the screens. Amp named the
+function that swaps the screens `present()`. I didn't like that and renamed it
+`swapScreens()`. As the framework progressed, I saw Amp try to find `present()`,
+only to see it wasn't there..."let me try something else". Eventually finding
+the function under the name that made sense to **me**. It spun it's wheels
+because *I* interjected with *my* opinions about code naming, structure, and
+layout. My opinions are not the most likely opinion apparently. The LLM chose a
+name based on it's training data and context - it decided what to call that
+function based on everything it's learned and the context I provided. I pushed
+it another direction and made it's job harder the next time. The LLM could no
+longer say "what would past-Amp have called this?" - it had to know what
+past-*Tim* would call this.
+
+I saw this repeat a few times, and realized my mistake. I was interferring with
+it's ability to navigate using it's own thoughts. I slowed it down, cost more
+tokens as it ran more loops, and *I* got frustrated that it couldn't remember.
+So I changed my approach. I stopped telling the LLM how to name things, or where
+to put things. It gets to decide that, because the next time it has to find it
+it will find it faster - and I can fix the problem I set out to solve faster.
+And now, as [Thorsten](https://x.com/thorstenball/status/1962926086884401518)
+says - Amp *rips* with our TUI framework. And I think it's because Amp got the
+freedom to name and structure everything.
+
+I think of this kind of like `go fmt`, but instead of strict formatting rules
+that nobody is really in love with but everybody ok with, I allow the LLM to use
+probabilistic naming - everything is vanilla and boring, but it makes sense to
+Amp.
+
+A codebase for agents, by agents.

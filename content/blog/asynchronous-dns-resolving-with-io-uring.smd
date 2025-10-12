@@ -3,6 +3,7 @@
 .date = @date("2025-05-01T11:19:26-05:00"),
 .author = "Tim Culverhouse",
 .layout = "post.shtml",
+.draft = true,
 ---
 
 Yesterday I added an asynchronous DNS resolver to my
