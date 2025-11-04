@@ -1,0 +1,196 @@
+---
+title: "Private Mode for Automatic Paste Notifications"
+date: 2025-11-04T00:00:00Z
+description: "A terminal specification for automatic paste notifications using the Kitty clipboard protocol, enabling applications to receive rich clipboard content without polling."
+---
+
+Terminal applications commonly use bracketed paste mode (private mode 2004) to
+distinguish between typed input and pasted content. This prevents accidental
+command execution and allows special handling of multi-line pastes. However,
+bracketed paste only provides plain text data and no MIME type information.
+
+The [Kitty clipboard protocol](https://sw.kovidgoyal.net/kitty/clipboard/)
+defines a request-response mechanism for reading and writing clipboard data with
+full MIME type support. However, this requires applications to explicitly
+request clipboard data, which doesn't integrate naturally with paste events.
+
+This specification defines a new Private Mode which causes paste events to
+trigger unsolicited MIME type listings via the Kitty clipboard protocol:
+
+- `5522` - Enable/disable unsolicited clipboard MIME type notifications on paste
+events
+
+> [!NOTE] This mode requires terminal support for the Kitty clipboard protocol
+> (OSC 5522). Applications can detect support by querying this private mode.
+> Terminals conforming to this specification MUST also support the entirety of
+> the Kitty Clipboard Extension (OSC 5522).
+
+## Detection and Enabling
+
+Detection is performed with a standard `DECRQM` query:
+
+`CSI ? 5522 $ p`
+
+To which the terminal will respond with a `DECRPM` response:
+
+`CSI ? 5522 ; Ps $ y`
+
+A `Ps` value of 0 or 4 means the mode is not supported. [Reference](https://www.vt100.net/docs/vt510-rm/DECRPM.html)
+
+The mode can be enabled using `DECSET` or `DECRST` control sequences:
+
+`CSI ? 5522 h` to enable the mode.
+`CSI ? 5522 l` to disable the mode.
+
+## Paste Notification Format
+
+When this mode is enabled and the user performs a paste operation, the terminal
+sends an unsolicited list of available MIME types from the clipboard using the
+standard Kitty clipboard protocol response format (as if it had received a read
+request with a base64-encoded period `.` as the MIME type):
+
+**Terminal → Application:**
+```
+OSC 5522 ; type=read:status=OK ST
+OSC 5522 ; type=read:status=DATA:mime=<base64_mime_type> ST
+    [... one DATA packet per available MIME type, with no data payload ...]
+OSC 5522 ; type=read:status=DONE ST
+```
+
+Where:
+- `OSC` is `ESC ]` (0x1b 0x5d)
+- `ST` is `ESC \` (0x1b 0x5c) or `BEL` (0x07)
+- `<base64_mime_type>` is the base64-encoded MIME type (e.g., `dGV4dC9wbGFpbg==`
+for `text/plain`)
+- The `DATA` packets contain only the `mime=` field with no data payload (per
+the Kitty clipboard protocol for MIME type listing)
+
+The application then makes an explicit read request for the desired MIME type
+using the standard Kitty clipboard protocol:
+
+**Application → Terminal:**
+```
+OSC 5522 ; type=read:mime=<base64_mime_type> ST
+```
+
+**Terminal → Application:**
+```
+OSC 5522 ; type=read:status=OK ST
+OSC 5522 ; type=read:status=DATA:mime=<base64_mime_type> ; <base64_data> ST
+    [... additional DATA packets if the data is large ...]
+OSC 5522 ; type=read:status=DONE ST
+```
+
+Where `<base64_data>` is the base64-encoded clipboard content, chunked to a
+maximum of 4096 bytes before encoding
+
+## Paste Behavior
+
+When this mode is enabled and a paste event occurs, the terminal MUST send an
+unsolicited response as if it received a Kitty clipboard read request with a
+base64-encoded period (`.`) as the MIME type. This sends a list of available
+MIME types using `DATA` packets with no data payload. Standard bracketed paste
+(mode 2004) is NOT used.
+
+The key innovation of this mode is that the MIME type listing is sent
+automatically by the terminal when the user pastes, without requiring an
+explicit read request from the application.
+
+The terminal MUST send all available MIME types from the system clipboard as
+separate `DATA` packets (with `mime=` but no data payload). The application then
+selects which MIME type it wants and makes an explicit read request for that
+type.
+
+This design allows the application to choose the most appropriate format for its
+needs, rather than relying on the terminal to guess the correct priority.
+
+## Implementation Notes
+
+When enabled, this mode takes precedence over standard bracketed paste mode
+(2004). Terminals MUST NOT send both sequence types for the same paste event.
+
+If both mode 5522 and mode 2004 are enabled, the terminal MUST use mode 5522.
+
+## Security Considerations
+
+This mode enables unsolicited MIME type listings on paste events. However, it
+does not introduce new security concerns beyond the existing Kitty clipboard
+protocol (OSC 5522):
+
+- MIME type listings reveal only the format types available, not the actual
+clipboard content
+- The existing OSC 5522 specification does not require permission prompts for
+listing MIME types
+- Actual clipboard data is only transmitted when the application explicitly
+requests it via OSC 5522 read requests
+
+Terminals SHOULD apply the same security policies for this mode as they do for
+the standard Kitty clipboard protocol. Applications MUST validate MIME types and
+sanitize clipboard data appropriately before processing.
+
+## Example
+
+An application queries the terminal for support:
+
+A: `\x1b[?5522$p`
+
+The terminal responds that the mode is supported but not enabled:
+
+T: `\x1b[?5522;2$y`
+
+The application enables automatic paste notifications:
+
+A: `\x1b[?5522h`
+
+The user pastes plain text "Hello, world!". The terminal sends available MIME
+types:
+
+```
+T: \x1b]5522;type=read:status=OK\x1b\\
+T: \x1b]5522;type=read:status=DATA:mime=dGV4dC9wbGFpbg==\x1b\\
+T: \x1b]5522;type=read:status=DONE\x1b\\
+```
+
+The application requests the text/plain content:
+
+```
+A: \x1b]5522;type=read:mime=dGV4dC9wbGFpbg==\x1b\\
+```
+
+The terminal responds with the data:
+
+```
+T: \x1b]5522;type=read:status=OK\x1b\\
+T: \x1b]5522;type=read:status=DATA:mime=dGV4dC9wbGFpbg==;SGVsbG8sIHdvcmxkIQ==\x1b\\
+T: \x1b]5522;type=read:status=DONE\x1b\\
+```
+
+The user pastes HTML content with a plain text fallback. The terminal sends
+available types:
+
+```
+T: \x1b]5522;type=read:status=OK\x1b\\
+T: \x1b]5522;type=read:status=DATA:mime=dGV4dC9odG1s\x1b\\
+T: \x1b]5522;type=read:status=DATA:mime=dGV4dC9wbGFpbg==\x1b\\
+T: \x1b]5522;type=read:status=DONE\x1b\\
+```
+
+The application requests the HTML content:
+
+```
+A: \x1b]5522;type=read:mime=dGV4dC9odG1s\x1b\\
+```
+
+The terminal responds with the HTML data:
+
+```
+T: \x1b]5522;type=read:status=OK\x1b\\
+T: \x1b]5522;type=read:status=DATA:mime=dGV4dC9odG1s;PGI+Qm9sZCB0ZXh0PC9iPg==\x1b\\
+T: \x1b]5522;type=read:status=DONE\x1b\\
+```
+
+## References
+
+- [Bracketed Paste Mode](https://cirw.in/blog/bracketed-paste) - Original bracketed paste specification
+- [Kitty Clipboard Protocol](https://sw.kovidgoyal.net/kitty/clipboard/) - Kitty's clipboard extension
+- [MIME Types](https://www.iana.org/assignments/media-types/media-types.xhtml) - IANA media type registry

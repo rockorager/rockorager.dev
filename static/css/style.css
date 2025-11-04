@@ -143,6 +143,19 @@ code {
     color: var(--code-color);
 }
 
+pre {
+    background-color: var(--border-color);
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+}
+
+pre code {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+}
+
 body.home header nav a[href="/"],
 body.posts header nav a[href="/posts/"],
 body.misc header nav a[href="/misc/"] {
