@@ -1,7 +1,7 @@
 ---
 title: "Private Mode for Automatic Paste Notifications"
 date: 2025-11-04T00:00:00Z
-lastmod: 2026-05-16T00:00:00Z
+lastmod: 2026-05-17T00:00:00Z
 description: "A terminal specification for automatic paste notifications using the Kitty clipboard protocol, enabling applications to receive rich clipboard content without polling."
 ---
 
@@ -49,12 +49,12 @@ When this mode is enabled and the user performs a paste operation, the terminal
 sends an unsolicited list of available MIME types from the clipboard location
 that caused the paste using the standard Kitty clipboard protocol response
 format (as if it had received a read request with a base64-encoded period `.` as
-the MIME type). The terminal also generates a single-use password (token) for
+the MIME type). The terminal may also generate a single-use password (token) for
 this paste event.
 
 **Terminal → Application:**
 ```
-OSC 5522 ; type=read:status=OK[:loc=primary]:password=<base64_password> ST
+OSC 5522 ; type=read:status=OK[:loc=primary][:pw=<base64_password>] ST
 OSC 5522 ; type=read:status=DATA:mime=<base64_mime_type> ST
     [... one DATA packet per available MIME type, with no data payload ...]
 OSC 5522 ; type=read:status=DONE ST
@@ -74,13 +74,13 @@ the terminal
 the Kitty clipboard protocol for MIME type listing)
 
 The application then makes an explicit read request for the desired MIME type
-using the standard Kitty clipboard protocol, including the password and reading
-from the same clipboard location:
+using the standard Kitty clipboard protocol, including the password token when
+one was provided, and reading from the same clipboard location:
 
 **Application → Terminal:**
 ```
-OSC 5522 ; type=read:mime=<base64_mime_type>:password=<base64_password> ST
-OSC 5522 ; type=read:loc=primary:mime=<base64_mime_type>:password=<base64_password> ST
+OSC 5522 ; type=read:mime=<base64_mime_type>:pw=<base64_password> ST
+OSC 5522 ; type=read:loc=primary:mime=<base64_mime_type>:pw=<base64_password> ST
 ```
 
 The first form reads from the default system clipboard and is used when the
@@ -103,8 +103,8 @@ maximum of 4096 bytes before encoding
 When this mode is enabled and a paste event occurs, the terminal MUST send an
 unsolicited response as if it received a Kitty clipboard read request with a
 base64-encoded period (`.`) as the MIME type. This sends a list of available
-MIME types using `DATA` packets with no data payload. The terminal MUST also
-include a `password` field in the `OK` response containing a unique, single-use
+MIME types using `DATA` packets with no data payload. The terminal SHOULD also
+include a `pw` field in the `OK` response containing a unique, single-use
 token for this paste event. If the paste event came from the primary selection,
 the terminal MUST also include `loc=primary` in the `OK` response. If the paste
 event came from the default system clipboard, the terminal MUST omit `loc`.
@@ -117,7 +117,8 @@ an explicit read request from the application.
 The terminal MUST send all available MIME types from the paste event's clipboard
 location as separate `DATA` packets (with `mime=` but no data payload). The
 application then selects which MIME type it wants and makes an explicit read
-request for that type, using the received clipboard location and password.
+request for that type, using the received clipboard location and password token
+when one was provided.
 
 This design allows the application to choose the most appropriate format for its
 needs, rather than relying on the terminal to guess the correct priority, while
@@ -137,12 +138,13 @@ does not introduce new security concerns beyond the existing Kitty clipboard
 protocol (OSC 5522):
 
 - **Single-Use Password**: To prevent clipboard sniffing while avoiding repetitive
-  confirmation prompts, the terminal generates a cryptographic single-use password
-  for each paste event.
-  - The password is sent with the initial unsolicited MIME list.
-  - The application must include this password when requesting the clipboard content.
-  - If the password matches the one generated for the current paste event, the
-    terminal MUST return the clipboard data without prompting the user for confirmation.
+  confirmation prompts, the terminal can generate a cryptographic single-use
+  password for each paste event.
+  - The password is sent in the `pw` field with the initial unsolicited MIME list.
+  - The application should include this password when requesting the clipboard content.
+  - If a password was provided and it matches the one generated for the current
+    paste event, the terminal MUST return the clipboard data without prompting
+    the user for confirmation.
   - The password MUST be scoped to the clipboard location that caused the paste
     event and MUST NOT authorize reads from any other clipboard location.
   - The password MUST be invalidated after use or after a short timeout.
@@ -175,19 +177,19 @@ The application enables automatic paste notifications:
 A: `\x1b[?5522h`
 
 The user pastes plain text "Hello, world!" from the system clipboard. The
-terminal sends available MIME types and a password `secret123` (base64:
+terminal sends available MIME types and a password token `secret123` (base64:
 `c2VjcmV0MTIz`):
 
 ```
-T: \x1b]5522;type=read:status=OK:password=c2VjcmV0MTIz\x1b\\
+T: \x1b]5522;type=read:status=OK:pw=c2VjcmV0MTIz\x1b\\
 T: \x1b]5522;type=read:status=DATA:mime=dGV4dC9wbGFpbg==\x1b\\
 T: \x1b]5522;type=read:status=DONE\x1b\\
 ```
 
-The application requests the text/plain content using the password:
+The application requests the text/plain content using the password token:
 
 ```
-A: \x1b]5522;type=read:mime=dGV4dC9wbGFpbg==:password=c2VjcmV0MTIz\x1b\\
+A: \x1b]5522;type=read:mime=dGV4dC9wbGFpbg==:pw=c2VjcmV0MTIz\x1b\\
 ```
 
 The terminal responds with the data:
@@ -199,20 +201,20 @@ T: \x1b]5522;type=read:status=DONE\x1b\\
 ```
 
 The user pastes HTML content with a plain text fallback from the primary
-selection. The terminal sends available types and password `secret456` (base64:
+selection. The terminal sends available types and a password token `secret456` (base64:
 `c2VjcmV0NDU2`):
 
 ```
-T: \x1b]5522;type=read:status=OK:loc=primary:password=c2VjcmV0NDU2\x1b\\
+T: \x1b]5522;type=read:status=OK:loc=primary:pw=c2VjcmV0NDU2\x1b\\
 T: \x1b]5522;type=read:status=DATA:mime=dGV4dC9odG1s\x1b\\
 T: \x1b]5522;type=read:status=DATA:mime=dGV4dC9wbGFpbg==\x1b\\
 T: \x1b]5522;type=read:status=DONE\x1b\\
 ```
 
-The application requests the HTML content using the password:
+The application requests the HTML content using the password token:
 
 ```
-A: \x1b]5522;type=read:loc=primary:mime=dGV4dC9odG1s:password=c2VjcmV0NDU2\x1b\\
+A: \x1b]5522;type=read:loc=primary:mime=dGV4dC9odG1s:pw=c2VjcmV0NDU2\x1b\\
 ```
 
 The terminal responds with the HTML data:
@@ -225,6 +227,9 @@ T: \x1b]5522;type=read:status=DONE\x1b\\
 
 ## Changelog
 
+- 2026-05-17: Renamed the password key to `pw` to match the Kitty clipboard
+  protocol and made the paste-event password token optional/recommended rather
+  than mandatory.
 - 2026-05-16: Added `loc=primary` to paste notifications for paste events from
   the primary selection. Notifications for the default system clipboard omit
   `loc`, matching the Kitty clipboard protocol.
