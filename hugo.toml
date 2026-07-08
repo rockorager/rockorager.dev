@@ -6,6 +6,11 @@ title = 'rockorager.dev'
 description = 'A minimal blog'
 
 [markup]
+  [markup.highlight]
+    noClasses = false
+    guessSyntax = true
+    lineNos = false
+    tabWidth = 4
   [markup.goldmark]
     [markup.goldmark.renderer]
       unsafe = true
