@@ -459,3 +459,28 @@ footer p {
     border-radius: 50%;
     margin: 0 auto 1rem;
 }
+
+.ansi-parser-viewport {
+    width: min(1200px, calc(100vw - 2rem));
+    margin: 2rem 0 2rem 50%;
+    overflow-x: auto;
+    transform: translateX(-50%);
+    scrollbar-color: var(--border-strong) var(--surface-color);
+}
+
+.ansi-parser-viewport:focus-visible {
+    outline: 2px solid var(--link-color);
+    outline-offset: 0.25rem;
+}
+
+.ansi-parser-diagram {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+@media (max-width: 700px) {
+    .ansi-parser-diagram {
+        min-width: 65rem;
+    }
+}
