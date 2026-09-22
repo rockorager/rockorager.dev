@@ -55,7 +55,7 @@ html {
 }
 
 body {
-    font-family: system-ui;
+    font-family: sans-serif;
     line-height: 1.65;
     max-width: 800px;
     margin: 0 auto;
