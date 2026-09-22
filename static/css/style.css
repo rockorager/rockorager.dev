@@ -311,12 +311,8 @@ footer {
     color: var(--text-muted);
     font-size: 0.9rem;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
-}
-
-footer p {
-    margin: 0;
 }
 
 .social-links {
