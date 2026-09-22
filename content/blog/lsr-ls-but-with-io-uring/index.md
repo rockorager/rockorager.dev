@@ -15,7 +15,7 @@ magnitude fewer syscalls**. I'm calling it
 [lsr](https://tangled.sh/@rockorager.dev/lsr). Let's start with the benchmarks,
 then we'll see how we got there.
 
-![screenshot](screenshot.webp)
+![screenshot](/blog/lsr-ls-but-with-io-uring/screenshot.webp)
 
 ## Benchmarks
 

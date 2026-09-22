@@ -48,6 +48,8 @@ class SiteTests(unittest.TestCase):
             (ROOT / "posts/lsr-ls-but-with-io-uring/screenshot.webp").read_bytes(),
             (ROOT / "blog/lsr-ls-but-with-io-uring/screenshot.webp").read_bytes(),
         )
+        images = [a["src"] for tag, a in HTML(ROOT / POST.lstrip("/") / "index.html").elements if tag == "img"]
+        self.assertEqual(images, [POST + "screenshot.webp"])
 
     def test_drafts_are_not_published(self):
         for section, slug in DRAFTS:
