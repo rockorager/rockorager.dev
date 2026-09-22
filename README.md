@@ -37,3 +37,25 @@ point at that preview rather than the production site:
 ```sh
 zola build --base-url https://your-preview-domain --output-dir <preview-directory>
 ```
+
+## Cloudflare Pages Git integration
+
+Connect the `rockorager/rockorager.dev` GitHub repository to a Pages project
+with these settings:
+
+| Setting | Value |
+| --- | --- |
+| Production branch | `main` |
+| Build command | `./build.sh` |
+| Build output directory | `public` |
+| Root directory | Repository root (leave blank) |
+| Environment variable, production and preview | `ZOLA_VERSION=0.23.6` |
+
+Pages builds and deploys automatically on push. The build script uses
+`CF_PAGES_URL` for non-`main` branch previews, so images, feeds, and redirects
+stay within the preview. Production builds keep `https://rockorager.dev`.
+
+Connecting Git does not move the live domain. Verify the Pages deployment
+before adding `rockorager.dev` as a custom domain and replacing its existing
+DNS record. Until then, `release.sh` remains the manual deployment path to
+the current server; Pages must run `build.sh`, not `release.sh`.

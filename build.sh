@@ -1,7 +1,11 @@
 #!/bin/sh
 set -eu
 
-zola build
+if [ "${CF_PAGES:-}" = "1" ] && [ "${CF_PAGES_BRANCH:-}" != "main" ]; then
+    zola build --base-url "$CF_PAGES_URL"
+else
+    zola build
+fi
 
 # Keep existing blog subscribers and embedded images working after the move.
 cp public/blog/index.xml public/posts/index.xml
