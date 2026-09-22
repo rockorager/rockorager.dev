@@ -1,7 +1,7 @@
 ---
 title: "Private Mode for Automatic Paste Notifications"
 date: 2025-11-04T00:00:00Z
-lastmod: 2026-08-04T00:00:00Z
+updated: 2026-08-04T00:00:00Z
 description: "A terminal specification for automatic paste notifications using the Kitty clipboard protocol, enabling applications to receive rich clipboard content without polling."
 ---
 

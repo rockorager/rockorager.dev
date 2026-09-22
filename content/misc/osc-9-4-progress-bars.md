@@ -79,7 +79,7 @@ WezTerm added support in February 2025. Implements all standard states: none, se
 ### Windows Terminal
 Windows Terminal displays the progress in the Windows taskbar, updating the taskbar icon to show progress state and percentage.
 
-### xterm.js
+### xterm.js {#xtermjs}
 xterm.js provides support via the `@xterm/addon-progress` addon. Supports all states: remove, normal, error, indeterminate, and pause/warning.
 
 ## Notes

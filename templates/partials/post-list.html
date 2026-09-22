@@ -1,0 +1,8 @@
+<ul class="post-list">
+    {% for post in posts %}
+    <li>
+        <time class="date" datetime="{{ post.date | date(format='%Y-%m-%d') }}">{{ post.date | date(format="%Y-%m-%d") }}</time>
+        <a href="{{ post.path | safe }}">{{ post.title }}</a>
+    </li>
+    {% endfor %}
+</ul>

@@ -2,8 +2,7 @@
 
 set -e
 
-rm -rf public
-hugo
+./build.sh
 
 REMOTE_USER="tim"
 REMOTE_HOST="rockorager.dev"

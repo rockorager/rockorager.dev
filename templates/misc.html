@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ section.title }} | {{ config.title }}{% endblock title %}
+{% block main %}
+<h1>{{ section.title }}</h1>
+<ul class="notes-list">
+    {% for note in section.pages %}
+    <li>
+        <a href="{{ note.path | safe }}" class="note-card">
+            <h2 class="note-title">{{ note.title }}</h2>
+            {% if note.description %}<p>{{ note.description }}</p>{% endif %}
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock main %}

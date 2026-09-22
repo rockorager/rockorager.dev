@@ -1,8 +1,9 @@
 +++
 title = "More syscall golf"
 date = 2025-05-01T16:41:52-05:00
-author = "Tim Culverhouse"
+authors = ["Tim Culverhouse"]
 draft = true
+aliases = ["/posts/more-syscall-golf/"]
 +++
 
 I realized that in [my last

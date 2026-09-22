@@ -1,8 +1,9 @@
 +++
 title = "Asynchronous DNS resolving with io_uring"
 date = 2025-05-01T11:19:26-05:00
-author = "Tim Culverhouse"
+authors = ["Tim Culverhouse"]
 draft = true
+aliases = ["/posts/asynchronous-dns-resolving-with-io-uring/", "/log/asynchronous-dns-resolving-with-io-uring/"]
 +++
 
 Yesterday I added an asynchronous DNS resolver to my

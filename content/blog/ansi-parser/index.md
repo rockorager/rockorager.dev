@@ -5,6 +5,7 @@ description: "A complete, UTF-8-aware state machine for parsing ANSI terminal co
 draft: true
 aliases:
   - /misc/ansi-parser/
+  - /posts/ansi-parser/
 ---
 
 This is a work-in-progress replacement for Paul Flo Williams's excellent
@@ -46,7 +47,7 @@ a separate `csi subparam` state: `3A` performs `subparam` and enters or remains
 in that state, while `3B` performs `param` and returns to `csi param` to start
 the next top-level parameter.
 
-{{< ansi-parser >}}
+{% include "shortcodes/ansi_parser.html" %}
 
 [Download the editable Excalidraw source](ansi-parser.excalidraw).
 

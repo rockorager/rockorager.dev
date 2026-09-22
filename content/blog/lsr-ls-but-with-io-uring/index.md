@@ -1,8 +1,9 @@
 +++
 title = "lsr: ls but with io_uring"
 date = 2025-05-06T11:15:50-05:00
-author = "Tim Culverhouse"
+authors = ["Tim Culverhouse"]
 draft = false
+aliases = ["/posts/lsr-ls-but-with-io-uring/"]
 +++
 
 

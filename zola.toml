@@ -1,0 +1,18 @@
+base_url = "https://rockorager.dev"
+title = "rockorager.dev"
+description = "Writing about terminals, Zig, and asynchronous I/O by Tim Culverhouse."
+default_language = "en"
+author = "Tim Culverhouse"
+generate_feeds = true
+feed_filenames = ["index.xml"]
+
+[markdown]
+github_alerts = true
+insert_anchor_links = "right"
+
+[markdown.highlighting]
+light_theme = "github-light"
+dark_theme = "github-dark"
+
+[extra]
+email = "tim@timculverhouse.com"

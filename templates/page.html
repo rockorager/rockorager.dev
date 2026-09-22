@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ page.title }} | {{ config.title }}{% endblock title %}
+{% block description %}{% if page.description %}{{ page.description }}{% else %}{{ page.title }} — {{ config.author }}{% endif %}{% endblock description %}
+{% block main %}
+<article>
+    <h1>{{ page.title }}</h1>
+    <time datetime="{{ page.date | date(format='%Y-%m-%d') }}">{{ page.date | date(format="%B %-d, %Y") }}</time>
+    {{ page.content | safe }}
+    {% if page.components[0] == "blog" %}
+    <p class="post-reply">Thoughts? <a href="mailto:{{ config.extra.email }}?subject={{ page.title | urlencode_strict }}">Reply by email</a>.</p>
+    {% endif %}
+</article>
+{% endblock main %}

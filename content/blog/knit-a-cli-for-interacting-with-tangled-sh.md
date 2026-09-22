@@ -1,8 +1,9 @@
 +++
 title = "knit: a cli for interacting with tangled.sh"
 date = 2025-05-09T15:34:59-05:00
-author = "Tim Culverhouse"
+authors = ["Tim Culverhouse"]
 draft = true
+aliases = ["/posts/knit-a-cli-for-interacting-with-tangled-sh/"]
 +++
 
 [tangled.sh](https://tangled.sh) is a *fantastic* new git forge. It has all of

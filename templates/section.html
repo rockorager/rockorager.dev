@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ section.title }} | {{ config.title }}{% endblock title %}
+{% block main %}
+<section>
+    <div class="section-heading">
+        <h1>{{ section.title }}</h1>
+        {% include "partials/rss-link.html" %}
+    </div>
+    {% set posts = section.pages %}
+    {% include "partials/post-list.html" %}
+</section>
+{% endblock main %}
