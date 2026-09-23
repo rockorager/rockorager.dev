@@ -1,0 +1,22 @@
+---
+import { getEmDashEntry } from "emdash";
+import Base from "../../layouts/Base.astro";
+import RichContent from "../../components/RichContent.astro";
+import { sections, articleDate, type Section } from "../../lib/content";
+const section = Astro.params.section as Section;
+if (!(section in sections) || !Astro.params.slug) return Astro.rewrite("/404");
+const { entry, isPreview, cacheHint, error } = await getEmDashEntry(sections[section], Astro.params.slug);
+if (error) throw new Error(error.message);
+if (!entry) return Astro.rewrite("/404");
+Astro.cache.set(cacheHint);
+if (isPreview) Astro.response.headers.set("Cache-Control", "private, no-store");
+const date = articleDate(entry.data);
+---
+<Base title={`${entry.data.title} | rockorager.dev`} description={entry.data.description || `${entry.data.title} — Tim Culverhouse`} noindex={isPreview}>
+  <article>
+    <h1>{entry.data.title}</h1>
+    <time datetime={date.toISOString().slice(0, 10)}>{date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })}</time>
+    <RichContent value={entry.data.content} />
+    {section === "blog" && <p class="post-reply"><a href={`mailto:tim@timculverhouse.com?subject=${encodeURIComponent(entry.data.title)}`}>Send me your thoughts</a></p>}
+  </article>
+</Base>

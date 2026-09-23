@@ -1,0 +1,35 @@
+---
+import Base from "../../layouts/Base.astro";
+import { sections, publishedEntries, articleDate, type Section } from "../../lib/content";
+const section = Astro.params.section as Section;
+if (!(section in sections)) return Astro.rewrite("/404");
+const { entries, cacheHint } = await publishedEntries(section);
+Astro.cache.set(cacheHint);
+---
+<Base title={`${section} | rockorager.dev`}>
+  {section === "blog" ? (
+    <section>
+      <div class="section-heading"><h1>blog</h1></div>
+      <ul class="post-list">
+        {entries.map(entry => (
+          <li>
+            <time class="date" datetime={articleDate(entry.data).toISOString().slice(0, 10)}>{articleDate(entry.data).toISOString().slice(0, 10)}</time>
+            <a href={`/blog/${entry.id}/`}>{entry.data.title}</a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ) : (
+    <>
+      <h1>misc</h1>
+      <ul class="notes-list">
+        {entries.map(entry => (
+          <li><a href={`/misc/${entry.id}/`} class="note-card">
+            <h2 class="note-title">{entry.data.title}</h2>
+            {entry.data.description && <p>{entry.data.description}</p>}
+          </a></li>
+        ))}
+      </ul>
+    </>
+  )}
+</Base>

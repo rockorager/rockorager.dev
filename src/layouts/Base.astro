@@ -1,0 +1,31 @@
+---
+import SocialLinks from "../components/SocialLinks.astro";
+interface Props { title?: string; description?: string; noindex?: boolean }
+const { title = "rockorager.dev", description = "Writing about terminals, Zig, and asynchronous I/O by Tim Culverhouse.", noindex = false } = Astro.props;
+const current = Astro.url.pathname;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={new URL(current, Astro.site)} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="alternate" type="application/rss+xml" title="rockorager.dev — blog" href="/blog/index.xml" />
+  </head>
+  <body>
+    <header>
+      <nav aria-label="Main navigation">
+        {[['/', 'home'], ['/blog/', 'blog'], ['/misc/', 'misc']].map(([href, label]) => (
+          <a href={href} aria-current={current === href ? 'page' : href !== '/' && current.startsWith(href) ? 'location' : undefined}>{label}</a>
+        ))}
+      </nav>
+      <SocialLinks />
+    </header>
+    <main><slot /></main>
+  </body>
+</html>

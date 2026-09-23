@@ -1,7 +1,45 @@
 name = "rockorager-dev"
+main = "./src/worker.ts"
 compatibility_date = "2026-09-22"
+compatibility_flags = ["nodejs_compat"]
 
-[assets]
-directory = "./public"
-html_handling = "force-trailing-slash"
-not_found_handling = "none"
+# Local emulation needs no Cloudflare account. Add the real database_id only
+# when the production database and its initial import have been approved.
+[[d1_databases]]
+binding = "DB"
+database_name = "rockorager-dev"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "rockorager-dev-media"
+
+[triggers]
+crons = ["* * * * *"]
+
+# This originally isolated target now serves production. Keep its existing
+# resource names and build with CLOUDFLARE_ENV=staging; never deploy local.
+[env.staging]
+name = "rockorager-emdash-staging"
+account_id = "7026bdfd47696bdbd844ae8830af977f"
+# Access protects only workers.dev. The rockorager.dev editor uses passkeys;
+# its public pages are unrestricted.
+workers_dev = true
+# Alternate preview hostnames are not covered by that Access application.
+preview_urls = false
+routes = [{ pattern = "rockorager.dev", custom_domain = true }]
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "rockorager-emdash-staging"
+database_id = "16e10a86-d3ca-48be-99e1-781c91d2b5ad"
+
+[[env.staging.r2_buckets]]
+binding = "MEDIA"
+bucket_name = "rockorager-emdash-staging-media"
+
+[[env.staging.kv_namespaces]]
+binding = "SESSION"
+id = "a139841ab150402e85d0e9d6db42df59"
+
+[env.staging.triggers]
+crons = ["* * * * *"]

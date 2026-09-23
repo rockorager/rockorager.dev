@@ -1,0 +1,9 @@
+allowBuilds:
+  esbuild: true
+  workerd: true
+  sharp: false
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - emdash
+  - "@emdash-cms/*"
+blockExoticSubdeps: true

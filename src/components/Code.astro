@@ -1,0 +1,8 @@
+---
+import { highlight } from "../lib/highlight.mjs";
+interface Props { node: { code: string; language?: string; filename?: string } }
+const { node } = Astro.props;
+const rendered = await highlight(node.code, node.language);
+---
+{node.filename && <div class="code-filename">{node.filename}</div>}
+<Fragment set:html={rendered} />

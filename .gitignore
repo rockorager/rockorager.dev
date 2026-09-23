@@ -1,2 +1,11 @@
 public/
 .wrangler/
+node_modules/
+dist/
+.astro/
+.generated/
+.env
+.dev.vars
+emdash-env.d.ts
+.emdash/migrations.json
+.amp/portals/

@@ -1,20 +1,26 @@
-"""Check a production build without dependencies or network access."""
+"""Check the running local EmDash site; optionally compare a saved Zola build."""
 
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urljoin, urlsplit
+from urllib.request import urlopen, build_opener, HTTPRedirectHandler, Request
+from urllib.error import HTTPError
+import os
 import re
 import unittest
 import xml.etree.ElementTree as ET
 
 
-ROOT = Path(__file__).resolve().parents[1] / "public"
+ROOT = Path(__file__).resolve().parents[1]
+SERVER = os.environ.get("SITE_URL", "http://localhost:4322").rstrip("/")
 ORIGIN = "https://rockorager.dev"
+# Cloudflare's browser integrity check rejects Python's default user-agent.
+HEADERS = {"User-Agent": "rockorager-site-check/1.0"}
 POST = "/blog/lsr-ls-but-with-io-uring/"
 PUBLISHED = {"blog": set(), "misc": set()}
 DRAFTS = []
 for section in PUBLISHED:
-    for source in (ROOT.parent / "content" / section).rglob("*.md"):
+    for source in (ROOT / "content" / section).rglob("*.md"):
         if source.name == "_index.md":
             continue
         text = source.read_text()
@@ -26,53 +32,95 @@ for section in PUBLISHED:
             PUBLISHED[section].add(f"{ORIGIN}/{section}/{slug}/")
 
 
+def fetch(path):
+    with urlopen(Request(SERVER + path, headers=HEADERS)) as response:
+        return response.read()
+
+
 class HTML(HTMLParser):
-    def __init__(self, path):
+    def __init__(self, text):
         super().__init__()
         self.elements = []
-        self.feed(path.read_text())
+        self.article_text = []
+        self.reply_text = []
+        self.code = []
+        self.in_article = False
+        self.in_reply = False
+        self.in_pre = False
+        self.feed(text)
 
     def handle_starttag(self, tag, attrs):
         self.elements.append((tag, dict(attrs)))
+        if tag == "article":
+            self.in_article = True
+        if tag == "p" and "post-reply" in dict(attrs).get("class", "").split():
+            self.in_reply = True
+        if tag == "pre":
+            self.in_pre = True
+            self.code.append("")
+
+    def handle_endtag(self, tag):
+        if tag == "article":
+            self.in_article = False
+        if tag == "p":
+            self.in_reply = False
+        if tag == "pre":
+            self.in_pre = False
+
+    def handle_data(self, text):
+        if self.in_reply:
+            self.reply_text.append(text)
+        elif self.in_article and text.strip() != "#":
+            self.article_text.append(text)
+        if self.in_pre:
+            self.code[-1] += text
+
+
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, *args):
+        return None
 
 
 class SiteTests(unittest.TestCase):
     def test_published_routes_and_redirects(self):
         for route in ("/", "/blog/", POST, "/misc/"):
-            self.assertTrue((ROOT / route.lstrip("/") / "index.html").exists(), route)
-        for old, new in (("/posts/", "/blog/"), (POST.replace("/blog/", "/posts/"), POST)):
-            html = (ROOT / old.lstrip("/") / "index.html").read_text()
-            self.assertIn(ORIGIN + new, html)
-            self.assertIn("window.location.replace(target + hash)", html)
-        self.assertEqual(
-            (ROOT / "posts/lsr-ls-but-with-io-uring/screenshot.webp").read_bytes(),
-            (ROOT / "blog/lsr-ls-but-with-io-uring/screenshot.webp").read_bytes(),
-        )
-        images = [a["src"] for tag, a in HTML(ROOT / POST.lstrip("/") / "index.html").elements if tag == "img"]
+            self.assertIn(b"<main>", fetch(route))
+        for old, new in (("/posts/", "/blog/"), (POST.replace("/blog/", "/posts/"), POST), ("/blog", "/blog/")):
+            with self.assertRaises(HTTPError) as caught:
+                build_opener(NoRedirect).open(Request(SERVER + old + "?ref=old", headers=HEADERS))
+            self.assertEqual(caught.exception.code, 301)
+            self.assertEqual(caught.exception.headers["Location"], new + "?ref=old")
+        self.assertEqual(fetch("/posts/lsr-ls-but-with-io-uring/screenshot.webp"), fetch(POST + "screenshot.webp"))
+        images = [a["src"] for tag, a in HTML(fetch(POST).decode()).elements if tag == "img"]
         self.assertEqual(images, [POST + "screenshot.webp"])
 
     def test_drafts_are_not_published(self):
+        listings = [fetch(path).decode() for path in ("/", "/blog/", "/index.xml", "/blog/index.xml", "/sitemap.xml")]
         for section, slug in DRAFTS:
-            for prefix in (section, "posts"):
-                self.assertFalse((ROOT / prefix / slug).exists(), slug)
-            for listing in ("index.html", "blog/index.html", "index.xml", "blog/index.xml", "sitemap.xml"):
-                self.assertNotIn(slug, (ROOT / listing).read_text())
+            with self.assertRaises(HTTPError) as caught:
+                fetch(f"/{section}/{slug}/")
+            self.assertEqual(caught.exception.code, 404, slug)
+            for listing in listings:
+                self.assertNotIn(slug, listing)
 
     def test_feeds_and_legacy_subscriptions(self):
         all_pages = PUBLISHED["blog"] | PUBLISHED["misc"]
         for feed, expected in (("blog/index.xml", PUBLISHED["blog"]), ("posts/index.xml", PUBLISHED["blog"]), ("index.xml", all_pages), ("misc/index.xml", PUBLISHED["misc"])):
-            items = ET.parse(ROOT / feed).findall("./channel/item")
+            items = ET.fromstring(fetch("/" + feed)).findall("./channel/item")
             self.assertEqual({item.findtext("link") for item in items}, expected, feed)
             self.assertEqual(len(items), len(expected), feed)
-        items = ET.parse(ROOT / "blog/index.xml").findall("./channel/item")
-        item = next(item for item in items if item.findtext("link") == ORIGIN + POST)
-        self.assertEqual(item.findtext("title"), "lsr: ls but with io_uring")
-        self.assertEqual((ROOT / "posts/index.xml").read_bytes(), (ROOT / "blog/index.xml").read_bytes())
+            for item in items:
+                body = item.findtext("{http://purl.org/rss/1.0/modules/content/}encoded")
+                self.assertTrue(body, "Full article body must be included")
+                for tag, attrs in HTML(body).elements:
+                    for key in ("src", "href"):
+                        if key in attrs:
+                            self.assertFalse(attrs[key].startswith(("/", "#")), attrs[key])
+        self.assertEqual(fetch("/posts/index.xml"), fetch("/blog/index.xml"))
 
     def test_local_links_assets_and_heading_anchors(self):
-        for path in ROOT.rglob("*.html"):
-            source = ORIGIN + "/" + str(path.relative_to(ROOT)).removesuffix("index.html")
-            for tag, attrs in HTML(path).elements:
+        for source in PUBLISHED["blog"] | PUBLISHED["misc"] | {ORIGIN + "/", ORIGIN + "/blog/", ORIGIN + "/misc/"}:
+            for tag, attrs in HTML(fetch(urlsplit(source).path).decode()).elements:
                 for key in ("href", "src"):
                     value = attrs.get(key)
                     if not value:
@@ -80,24 +128,43 @@ class SiteTests(unittest.TestCase):
                     url = urlsplit(urljoin(source, value))
                     if url.netloc != "rockorager.dev" or url.scheme not in ("https", "http"):
                         continue
-                    target = ROOT / unquote(url.path).lstrip("/")
-                    if target.is_dir():
-                        target /= "index.html"
-                    self.assertTrue(target.is_file(), f"{path}: {value}")
-                    if url.fragment and target.suffix == ".html":
-                        ids = {a.get("id") for _, a in HTML(target).elements}
-                        self.assertIn(unquote(url.fragment), ids, f"{path}: {value}")
-        ids = {a.get("id") for _, a in HTML(ROOT / "misc/osc-9-4-progress-bars/index.html").elements}
+                    data = fetch(url.path)
+                    if url.fragment:
+                        ids = {a.get("id") for _, a in HTML(data.decode()).elements}
+                        self.assertIn(unquote(url.fragment), ids, f"{source}: {value}")
+        ids = {a.get("id") for _, a in HTML(fetch("/misc/osc-9-4-progress-bars/").decode()).elements}
         self.assertIn("xtermjs", ids)
 
     def test_reply_subject_and_navigation(self):
-        html = HTML(ROOT / POST.lstrip("/") / "index.html")
+        html = HTML(fetch(POST).decode())
+        self.assertEqual("".join(html.reply_text), "Send me your thoughts")
         replies = [a["href"] for tag, a in html.elements if tag == "a" and a.get("href", "").startswith("mailto:") and "?subject=" in a["href"]]
         self.assertEqual(len(replies), 1)
         self.assertEqual(urlsplit(replies[0]).path, "tim@timculverhouse.com")
         self.assertEqual(parse_qs(urlsplit(replies[0]).query)["subject"], ["lsr: ls but with io_uring"])
-        active = [a["href"] for tag, a in html.elements if tag == "a" and "aria-current" in a]
-        self.assertEqual(active, ["/blog/"])
+        self.assertEqual([a["href"] for tag, a in html.elements if tag == "a" and "aria-current" in a], ["/blog/"])
+        for path in ("/", POST, "/misc/osc-9-4-progress-bars/"):
+            source = fetch(path).decode()
+            page = HTML(source)
+            self.assertNotIn("footer", [tag for tag, _ in page.elements])
+            header = HTML(source.split("<header>", 1)[1].split("</header>", 1)[0])
+            self.assertEqual({a["aria-label"]: a["href"] for tag, a in header.elements if tag == "a" and "aria-label" in a}, {
+                "RSS feed": "/blog/index.xml", "GitHub": "https://github.com/rockorager",
+                "Twitter/X": "https://x.com/rockorager", "Email": "mailto:tim@timculverhouse.com",
+            })
+            if path != POST:
+                self.assertEqual(page.reply_text, [])
+
+    @unittest.skipUnless(os.environ.get("ZOLA_BASELINE"), "Set ZOLA_BASELINE to compare the pre-migration build")
+    def test_original_content(self):
+        for url in PUBLISHED["blog"] | PUBLISHED["misc"]:
+            path = urlsplit(url).path
+            before = HTML((Path(os.environ["ZOLA_BASELINE"]) / path.lstrip("/") / "index.html").read_text())
+            after = HTML(fetch(path).decode())
+            normalize = lambda parts: re.sub(r"\s+", "", "".join(parts))
+            self.assertEqual(normalize(before.article_text), normalize(after.article_text), path)
+            self.assertEqual([code.rstrip() for code in before.code], [code.rstrip() for code in after.code], path)
+            self.assertEqual({a["id"] for _, a in before.elements if "id" in a}, {a["id"] for _, a in after.elements if "id" in a}, path)
 
 
 if __name__ == "__main__":

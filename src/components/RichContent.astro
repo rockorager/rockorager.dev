@@ -1,0 +1,19 @@
+---
+import { PortableText } from "emdash/ui";
+import type { PortableTextBlock } from "emdash";
+import Code from "./Code.astro";
+import Html from "./Html.astro";
+import Block from "./Block.astro";
+import Table from "./Table.astro";
+interface Props { value?: PortableTextBlock[] }
+const counts = new Map<string, number>();
+const value = (Astro.props.value ?? []).map(node => {
+  if (node._type !== "block" || !/^h[1-6]$/.test(String(node.style))) return node;
+  const text = (node.children as { text: string }[]).map(span => span.text).join("");
+  const slug = text.toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, "").trim().replace(/\s+/g, "-");
+  const occurrence = counts.get(slug) ?? 0;
+  counts.set(slug, occurrence + 1);
+  return { ...node, anchor: occurrence ? `${slug}-${occurrence}` : slug };
+});
+---
+<PortableText value={value} components={{ block: Block, type: { code: Code, htmlBlock: Html, table: Table } }} />

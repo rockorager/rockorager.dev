@@ -68,6 +68,10 @@ main {
 }
 
 header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
     margin-bottom: 3rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border-color);
@@ -208,6 +212,20 @@ pre code {
     color: var(--text-color);
 }
 
+.shiki {
+    background-color: var(--code-bg) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    .shiki, .shiki span {
+        color: var(--shiki-dark) !important;
+    }
+}
+
+article .emdash-image {
+    margin: 1rem 0;
+}
+
 .giallo-l {
     display: inline-block;
     min-height: 1lh;
@@ -304,26 +322,24 @@ th {
     background-color: var(--surface-hover);
 }
 
-footer {
-    margin-top: 4rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-}
-
 .social-links {
     display: flex;
     gap: 1rem;
+    margin-left: auto;
 }
 
 .social-links a {
     color: var(--text-muted);
     display: flex;
     align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    min-height: 24px;
+}
+
+.social-links svg {
+    width: 18px;
+    height: 18px;
 }
 
 .social-links a:hover {
@@ -380,14 +396,17 @@ footer {
 }
 
 @media (max-width: 480px) {
+    header nav {
+        gap: 1rem;
+    }
+
+    .social-links {
+        gap: 0.5rem;
+    }
+
     .post-list li {
         flex-direction: column;
         gap: 0.15rem;
-    }
-
-    footer {
-        flex-wrap: wrap;
-        gap: 1rem;
     }
 
     table {

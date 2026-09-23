@@ -1,0 +1,18 @@
+---
+import { PortableText } from "emdash/ui";
+import type { PortableTextBlock } from "emdash";
+interface Cell { _key: string; content: { _type: "span"; _key: string; text: string; marks?: string[] }[]; markDefs?: { _key: string; _type: string; [key: string]: unknown }[]; isHeader?: boolean; colspan?: number; rowspan?: number; textAlign?: string }
+interface Props { node: { rows: { cells: Cell[] }[]; hasHeaderRow?: boolean } }
+const { node } = Astro.props;
+const rows = node.rows ?? [];
+const cellValue = (cell: Cell): PortableTextBlock[] => [{ _type: "block", _key: cell._key, style: "normal", children: cell.content, markDefs: cell.markDefs ?? [] }];
+---
+<table>
+  {node.hasHeaderRow && rows[0] && <thead><tr>{rows[0].cells.map(cell => <th scope="col" colspan={cell.colspan} rowspan={cell.rowspan}><PortableText value={cellValue(cell)} /></th>)}</tr></thead>}
+  <tbody>{rows.slice(node.hasHeaderRow ? 1 : 0).map(row => <tr>{row.cells.map(cell => {
+    const Tag = cell.isHeader ? "th" : "td";
+    const align = ["left", "center", "right", "justify"].includes(cell.textAlign ?? "") ? cell.textAlign : undefined;
+    return <Tag colspan={cell.colspan} rowspan={cell.rowspan} style={align ? `text-align:${align}` : undefined}><PortableText value={cellValue(cell)} /></Tag>;
+  })}</tr>)}</tbody>
+</table>
+<style>td :global(p), th :global(p) { margin: 0; }</style>

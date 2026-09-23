@@ -1,0 +1,8 @@
+---
+interface Props { node: { style?: string; anchor?: string; textAlign?: string } }
+const { node } = Astro.props;
+const heading = /^h[1-6]$/.test(node.style ?? "");
+const Tag = (heading ? node.style : node.style === "blockquote" ? "blockquote" : "p") as "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "blockquote" | "p";
+const align = ["center", "right", "justify"].includes(node.textAlign ?? "") ? node.textAlign : undefined;
+---
+<Tag id={heading ? node.anchor : undefined} style={align ? `text-align:${align}` : undefined}><slot />{heading && <a href={`#${node.anchor}`} class="heading-link" aria-label="Link to this section">#</a>}</Tag>

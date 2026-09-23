@@ -1,0 +1,5 @@
+---
+import { sanitizeArticleHtml } from "../lib/html.mjs";
+interface Props { node: { html: string } }
+---
+<Fragment set:html={sanitizeArticleHtml(Astro.props.node.html)} />
