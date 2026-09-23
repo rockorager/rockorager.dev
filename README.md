@@ -69,7 +69,7 @@ Zig/bash/C/C++/Rust/JS/TS/JSON/diff grammars and plain-text fallback.
 ```sh
 pnpm test                  # Import, highlighting and HTML safety checks
 pnpm typecheck
-./build.sh                 # Production Worker build; does not deploy
+pnpm build                 # Worker build; does not deploy
 pnpm test:site             # HTTP checks against the dev server on port 4322
 ```
 
@@ -118,16 +118,32 @@ collections, or menus. Repeating it skips existing entries, including edited
 entries, rather than duplicating or overwriting them. This is not Git sync and
 is deliberately separate from deployment.
 
-For an authorized production update, stop the local service, build explicitly
-for the historical `staging` target, inspect it, then migrate and deploy:
+Workers Builds connects this repository's `main` branch to
+`rockorager-emdash-staging`, with these settings:
+
+| Setting | Value |
+| --- | --- |
+| Build command | `CLOUDFLARE_ENV=staging pnpm build` |
+| Deploy command | `pnpm wrangler deploy` |
+| Root directory | Repository root |
+| Non-production branch builds | Disabled |
+
+The old `rockorager-dev` Git build integration is disconnected. Pushes to
+`main` now build and deploy EmDash. The standard Astro build writes
+`.wrangler/deploy/config.json`, which directs Wrangler to the generated
+`dist/server/wrangler.json`; no custom deployment wrapper is needed.
+
+For an authorized manual production update, stop the local service and run
+the same commands:
 
 ```sh
 CLOUDFLARE_ENV=staging pnpm build
-pnpm exec emdash migrate --status --wrangler-config wrangler.toml --wrangler-env staging
-pnpm exec emdash migrate --wrangler-config wrangler.toml --wrangler-env staging
-pnpm exec wrangler deploy --config dist/server/wrangler.json
-pnpm exec emdash migrate --check --wrangler-config wrangler.toml --wrangler-env staging
+pnpm wrangler deploy
 ```
+
+EmDash's default automatic migration mode applies pending core migrations on
+the first request. Deployments do not rerun the explicit content import or
+overwrite existing editorial content.
 
 These commands require Cloudflare credentials and change **production** state.
 Before deploying, confirm `dist/server/wrangler.json` names
@@ -135,12 +151,8 @@ Before deploying, confirm `dist/server/wrangler.json` names
 `rockorager.dev` custom domain. Never deploy an ordinary
 local build: its default Worker name matches the existing static deployment.
 Do not enable preview hostnames unless they are also protected by Access.
-The legacy Workers Builds integration targets the preserved `rockorager-dev`
-static Worker, not EmDash. `build.sh` deliberately fails when `WORKERS_CI=1`
-to stop that pipeline before deployment. If the old Git hook remains enabled,
-its check will fail intentionally on pushes; disconnect it before configuring
-automatic EmDash deployments. `release.sh` also refuses the obsolete rsync
-deployment. Restart local development with `amp orb services ensure`.
+`release.sh` refuses the obsolete rsync deployment. Restart local development
+with `amp orb services ensure`.
 
 ## Editor authentication
 
