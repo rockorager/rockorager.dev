@@ -1,6 +1,6 @@
 # rockorager.dev
 
-Astro + EmDash 0.38 on Cloudflare Workers, with D1 for content and R2 for
+Astro + EmDash 1.3 on Cloudflare Workers, with D1 for content and R2 for
 uploaded media. The original Zola sources remain as the migration snapshot.
 Local development uses isolated emulation; deployment requires explicit
 Cloudflare credentials and approval. No analytics are enabled.
@@ -13,7 +13,7 @@ Use Node.js 22+ and the pnpm version in `package.json`.
 pnpm install --frozen-lockfile
 # Once per checkout; keep this private and stable, never commit it:
 umask 077
-test -e .env || { printf 'EMDASH_ENCRYPTION_KEY='; openssl rand -hex 32; } > .env
+test -e .env || pnpm exec emdash secrets generate --write .env
 pnpm dev --host 0.0.0.0 --port 4322
 ```
 

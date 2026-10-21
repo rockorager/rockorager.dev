@@ -19,7 +19,7 @@ export default defineConfig({
   ],
   vite: {
     optimizeDeps: {
-      // EmDash 0.38's lazy admin imports otherwise load thousands of icon modules.
+      // EmDash's lazy admin imports otherwise load thousands of icon modules.
       include: [
         "emdash > @emdash-cms/admin > @cloudflare/kumo",
         "emdash > @emdash-cms/admin > @phosphor-icons/react",
