@@ -13,8 +13,11 @@ database_name = "rockorager-dev"
 binding = "MEDIA"
 bucket_name = "rockorager-dev-media"
 
+# EmDash's scheduled() handler runs maintenance cleanup and scheduled
+# publishing. Nothing here schedules posts, and every-minute ticks exceed the
+# Workers Free CPU limit on cold isolates, so run it once a day.
 [triggers]
-crons = ["* * * * *"]
+crons = ["0 9 * * *"]
 
 # This originally isolated target now serves production. Keep its existing
 # resource names and build with CLOUDFLARE_ENV=staging; never deploy local.
@@ -42,4 +45,4 @@ binding = "SESSION"
 id = "a139841ab150402e85d0e9d6db42df59"
 
 [env.staging.triggers]
-crons = ["* * * * *"]
+crons = ["0 9 * * *"]
