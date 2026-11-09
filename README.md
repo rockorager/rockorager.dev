@@ -1,6 +1,6 @@
 # rockorager.dev
 
-Astro + EmDash 1.3 on Cloudflare Workers, with D1 for content and R2 for
+Astro + EmDash 1.4 on Cloudflare Workers, with D1 for content and R2 for
 uploaded media. The original Zola sources remain as the migration snapshot.
 Local development uses isolated emulation; deployment requires explicit
 Cloudflare credentials and approval. No analytics are enabled.
